@@ -1,0 +1,18 @@
+Phishing URL Detection - held-out test set (2,286 URLs)
+Model: Random Forest
+Features: length_url, length_hostname, ip, nb_dots, nb_hyphens, nb_at, nb_qm, nb_and, nb_or
+================================================================
+              precision    recall  f1-score   support
+
+  legitimate     0.7560    0.8049    0.7797      1143
+    phishing     0.7914    0.7402    0.7649      1143
+
+    accuracy                         0.7725      2286
+   macro avg     0.7737    0.7725    0.7723      2286
+weighted avg     0.7737    0.7725    0.7723      2286
+
+ROC-AUC              0.8706
+Average precision    0.8865
+Matthews corr coef   0.5462
+Specificity          0.8049
+False positive rate  0.1951

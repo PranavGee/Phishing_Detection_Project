@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhishGuard — Options</title>
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+
+<header class="head">
+  <div class="wrap">
+    <img src="icons/icon48.png" alt="" width="38" height="38">
+    <div>
+      <h1>PhishGuard</h1>
+      <p>AI phishing link protection — everything runs on this device.</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div id="welcome" class="welcome hidden">
+    <strong>PhishGuard is installed.</strong>
+    Browse as usual — you will only hear from it when a link looks like a
+    phishing site. Nothing you visit is ever uploaded.
+  </div>
+
+  <section class="card">
+    <h2>Protection</h2>
+
+    <label class="row">
+      <span>
+        <b>Enable PhishGuard</b>
+        <em>Score every page you open and interrupt risky navigations.</em>
+      </span>
+      <input type="checkbox" id="enabled">
+    </label>
+
+    <label class="row">
+      <span>
+        <b>Mark risky links on the page</b>
+        <em>Adds a red wavy underline to links the model flags, before you click.</em>
+      </span>
+      <input type="checkbox" id="highlightLinks">
+    </label>
+
+    <label class="row">
+      <span>
+        <b>Skip well-known domains</b>
+        <em>Never interrupt on major sites (google.com, github.com, your bank…).
+            Strongly recommended: the model reads only URL structure, so without
+            this it will occasionally flag sites you know are fine.</em>
+      </span>
+      <input type="checkbox" id="useAllowlist">
+    </label>
+
+    <div class="row block">
+      <span>
+        <b>Warning threshold — <em id="thresholdValue">0.70</em></b>
+        <em>How sure the model must be before it interrupts you. Lower catches
+            more phishing but interrupts more often; higher is quieter but
+            misses more. On held-out test data, 0.50 gives ~79% precision and
+            ~74% recall, while 0.70 gives ~93% precision and ~55% recall.</em>
+      </span>
+      <input type="range" id="threshold" min="0.3" max="0.9" step="0.05">
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Trusted sites</h2>
+    <p class="muted">
+      Sites you have chosen to trust. PhishGuard never interrupts these.
+    </p>
+    <div class="addrow">
+      <input type="text" id="newDomain" placeholder="example.com" spellcheck="false">
+      <button id="addDomain" type="button">Add</button>
+    </div>
+    <ul id="allowlist" class="chips"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Second opinion (optional)</h2>
+    <p class="muted">
+      PhishGuard already works completely offline using the model bundled with
+      the extension. If you also run the PhishGuard web app locally, it can ask
+      that server's larger Random Forest model to confirm a verdict.
+      <strong>Turning this on sends the URLs you visit to that server.</strong>
+    </p>
+
+    <label class="row">
+      <span><b>Use the API for a second opinion</b></span>
+      <input type="checkbox" id="useApi">
+    </label>
+
+    <div class="addrow">
+      <input type="text" id="apiUrl" placeholder="http://127.0.0.1:5000" spellcheck="false">
+      <button id="testApi" type="button">Test</button>
+    </div>
+    <p id="apiStatus" class="status"></p>
+  </section>
+
+  <section class="card">
+    <h2>Activity</h2>
+    <div class="stats">
+      <div><b id="statScanned">0</b><span>URLs scanned</span></div>
+      <div><b id="statBlocked">0</b><span>Warnings shown</span></div>
+      <div><b id="statProceeded">0</b><span>Warnings overridden</span></div>
+    </div>
+    <button id="resetStats" class="linkbtn" type="button">Reset counters</button>
+  </section>
+
+  <section class="card">
+    <h2>How it works</h2>
+    <p class="muted">
+      A gradient-boosting model, trained on 11,430 labelled URLs, reads nine
+      structural properties of an address — its length, the length of the
+      hostname, whether it hides a raw IP or a long hex token, and the number of
+      <code>.</code> <code>-</code> <code>@</code> <code>?</code> <code>&amp;</code>
+      <code>|</code> characters. It never loads the page, reads its content, or
+      sends anything over the network.
+    </p>
+    <p class="muted">
+      That also means it can be wrong in both directions: a plain-looking
+      phishing URL can slip through, and an unusually long legitimate URL can be
+      flagged. Treat a warning as a reason to look carefully at the address bar,
+      not as proof.
+    </p>
+  </section>
+
+  <p class="save-note" id="saveNote">Saved</p>
+</main>
+
+<script src="options.js"></script>
+</body>
+</html>

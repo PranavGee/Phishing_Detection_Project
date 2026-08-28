@@ -1,0 +1,23 @@
+/* PhishGuard — in-page marking of links the model flagged.
+   Deliberately subtle: a dotted red underline plus a small warning glyph, so
+   the page stays readable but risky links stand out before they are clicked. */
+
+a[data-phishguard="risky"] {
+  text-decoration: underline wavy #e02424 !important;
+  text-underline-offset: 3px !important;
+}
+
+a[data-phishguard="risky"]::after {
+  content: " \26A0";
+  color: #e02424;
+  font-size: .85em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+#phishguard-overlay-host {
+  all: initial;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+}

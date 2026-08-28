@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Local artefacts
+*.log
+.env
+
+# The dataset archive is unpacked into data/ and tracked there
+phishing_dataset.zip
+models/train_test_split.joblib

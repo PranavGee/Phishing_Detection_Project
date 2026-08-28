@@ -1,0 +1,42 @@
+{
+  "rows": 11430,
+  "per_feature": {
+    "length_url": {
+      "agreement": 0.999475,
+      "mismatches": 6
+    },
+    "length_hostname": {
+      "agreement": 1.0,
+      "mismatches": 0
+    },
+    "ip": {
+      "agreement": 1.0,
+      "mismatches": 0
+    },
+    "nb_dots": {
+      "agreement": 0.999913,
+      "mismatches": 1
+    },
+    "nb_hyphens": {
+      "agreement": 1.0,
+      "mismatches": 0
+    },
+    "nb_at": {
+      "agreement": 1.0,
+      "mismatches": 0
+    },
+    "nb_qm": {
+      "agreement": 1.0,
+      "mismatches": 0
+    },
+    "nb_and": {
+      "agreement": 1.0,
+      "mismatches": 0
+    },
+    "nb_or": {
+      "agreement": 1.0,
+      "mismatches": 0
+    }
+  },
+  "worst_agreement": 0.999475
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation report — PhishGuard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128202;</text></svg>">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  .figure { background: var(--panel); border: 1px solid var(--line);
+            border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+  .figure h3 { margin: 0 0 12px; font-size: 15px; }
+  .figure img { width: 100%; border-radius: 8px; background: #fff; display: block; }
+  table.rank { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.rank th, table.rank td { padding: 9px 10px; border-bottom: 1px solid var(--line);
+                                 text-align: right; }
+  table.rank th:first-child, table.rank td:first-child { text-align: left; }
+  table.rank th { color: var(--muted); font-weight: 600; font-size: 12px;
+                  text-transform: uppercase; letter-spacing: .07em; }
+  table.rank tr.best td { color: #7dffb9; font-weight: 700; }
+  .cm { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 420px; }
+  .cm div { background: var(--bg-soft); border: 1px solid var(--line);
+            border-radius: 10px; padding: 14px; text-align: center; }
+  .cm b { display: block; font-size: 24px; }
+  .cm span { font-size: 11.5px; color: var(--muted); text-transform: uppercase;
+             letter-spacing: .07em; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">&#128737;</span>
+      <span><strong>PhishGuard</strong><em>evaluation report</em></span>
+    </a>
+    <nav class="topnav">
+      <a href="/">&larr; Back to scanner</a>
+      <span class="pill">{{ meta.best_model }}</span>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:8px">
+    <h1>How well does it actually work?</h1>
+    <p class="sub">
+      Every number below comes from
+      <strong>{{ "{:,}".format(meta.n_test) }}</strong> held-out URLs the model
+      never saw while training, using only the nine requested URL features.
+    </p>
+  </section>
+
+  <section class="panels">
+    <article class="panel">
+      <h2>Headline metrics</h2>
+      <div class="statgrid">
+        <div class="stat"><b>{{ "%.4f"|format(metrics.roc_auc) }}</b><span>ROC-AUC</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.average_precision) }}</b><span>Avg precision</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.accuracy) }}</b><span>Accuracy</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.f1) }}</b><span>F1 score</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.precision) }}</b><span>Precision</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.recall) }}</b><span>Recall</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.mcc) }}</b><span>Matthews CC</span></div>
+        <div class="stat"><b>{{ "%.4f"|format(metrics.specificity) }}</b><span>Specificity</span></div>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Confusion matrix @ 0.50</h2>
+      <div class="cm">
+        <div><b style="color:#4ad991">{{ metrics.confusion_matrix.tn }}</b><span>True negative</span></div>
+        <div><b style="color:#ff8f8f">{{ metrics.confusion_matrix.fp }}</b><span>False positive</span></div>
+        <div><b style="color:#ff8f8f">{{ metrics.confusion_matrix.fn }}</b><span>False negative</span></div>
+        <div><b style="color:#4ad991">{{ metrics.confusion_matrix.tp }}</b><span>True positive</span></div>
+      </div>
+      <p class="fineprint" style="margin-top:12px">
+        Best F1 sits at a threshold of {{ metrics.best_f1_threshold }}
+        ({{ "%.4f"|format(metrics.best_f1_at_threshold) }}). The browser
+        extension deliberately blocks at a stricter 0.70, where precision is
+        ~93% — a false alarm on a real site costs more than a missed one.
+      </p>
+    </article>
+
+    <article class="panel">
+      <h2>Dataset</h2>
+      <p>
+        {{ "{:,}".format(meta.n_rows) }} URLs, balanced 50/50 between phishing
+        and legitimate. Split {{ "{:,}".format(meta.n_train) }} train /
+        {{ "{:,}".format(meta.n_test) }} test, stratified, seed
+        {{ meta.random_state }}.
+      </p>
+      <p class="fineprint">
+        Model inputs: {{ meta.feature_names|join(', ') }}.<br>
+        {% if meta.constant_features %}
+        Note: {{ meta.constant_features|join(', ') }} is constant across the
+        whole dataset, so it carries no signal.
+        {% endif %}
+      </p>
+    </article>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Model comparison (5-fold cross-validation on the training split)</h2>
+    <table class="rank">
+      <tr><th>Model</th><th>ROC-AUC</th><th>Accuracy</th><th>Precision</th>
+          <th>Recall</th><th>F1</th></tr>
+      {% for row in comparison %}
+      <tr class="{{ 'best' if row.model == meta.best_model }}">
+        <td>{{ row.model }}{% if row.model == meta.best_model %} &#9733;{% endif %}</td>
+        <td>{{ "%.4f"|format(row.roc_auc) }}</td>
+        <td>{{ "%.4f"|format(row.accuracy) }}</td>
+        <td>{{ "%.4f"|format(row.precision) }}</td>
+        <td>{{ "%.4f"|format(row.recall) }}</td>
+        <td>{{ "%.4f"|format(row.f1) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </section>
+
+  <h2 style="margin:34px 0 16px">Figures</h2>
+  {% for fig in figures %}
+  <div class="figure">
+    <h3>{{ fig.replace('.png','').replace('_',' ')[3:]|title }}</h3>
+    <img src="{{ url_for('figures', filename=fig) }}" alt="{{ fig }}" loading="lazy">
+  </div>
+  {% endfor %}
+</main>
+
+<footer class="foot wrap">
+  <p>Generated by <code>ml/evaluate.py</code> &middot; trained {{ meta.trained_at }}
+     &middot; scikit-learn {{ meta.sklearn_version }}</p>
+</footer>
+</body>
+</html>

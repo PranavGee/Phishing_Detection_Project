@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhishGuard — AI Phishing URL Detection</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128737;</text></svg>">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">&#128737;</span>
+      <span><strong>PhishGuard</strong><em>AI phishing URL detection</em></span>
+    </a>
+    <nav class="topnav">
+      <a href="/report">Evaluation report</a>
+      <a href="/api/model-info">API</a>
+      <span class="pill" title="Model currently serving predictions">{{ meta.best_model }}</span>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>Is this link safe?</h1>
+    <p class="sub">
+      Paste any link. A machine-learning model trained on
+      <strong>{{ "{:,}".format(meta.n_rows) }}</strong> real URLs scores it in
+      milliseconds — using only the structure of the address, so nothing is
+      ever visited or downloaded.
+    </p>
+
+    <form id="scan-form" class="scanbox" autocomplete="off">
+      <span class="scan-icon">&#128269;</span>
+      <input id="url-input" type="text" spellcheck="false"
+             placeholder="https://example.com/login" aria-label="URL to scan">
+      <button id="scan-btn" type="submit">Scan URL</button>
+    </form>
+
+    <div class="samples">
+      <span>Try:</span>
+      <button class="chip" data-url="https://www.github.com/explore">a normal site</button>
+      <button class="chip" data-url="http://secure-appleid.com.verify-login.duilawyeryork.com/ap/89e6a3b4b063b8d/?cmd=_update&amp;dispatch=89e6a3b4b063">a lookalike login page</button>
+      <button class="chip" data-url="http://192.168.1.44/wp-content/paypal-secure/webscr.php?cmd=_account-update&amp;session=a1b2c3d4e5">an IP-hosted page</button>
+    </div>
+  </section>
+
+  <section id="result" class="result hidden" aria-live="polite"></section>
+
+  <section class="panels">
+    <article class="panel">
+      <h2>How it decides</h2>
+      <p>Nine structural properties are read straight from the address bar —
+        no page content, no cookies, no browsing history.</p>
+      <ul class="featurelist">
+        <li><code>length_url</code> total length of the address</li>
+        <li><code>length_hostname</code> length of the domain part</li>
+        <li><code>ip</code> raw IP address or long hex token</li>
+        <li><code>nb_dots</code> number of <code>.</code></li>
+        <li><code>nb_hyphens</code> number of <code>-</code></li>
+        <li><code>nb_at</code> number of <code>@</code></li>
+        <li><code>nb_qm</code> number of <code>?</code></li>
+        <li><code>nb_and</code> number of <code>&amp;</code></li>
+        <li><code>nb_or</code> number of <code>|</code></li>
+      </ul>
+    </article>
+
+    <article class="panel">
+      <h2>Model performance</h2>
+      <div class="statgrid">
+        <div class="stat"><b>{{ "%.1f"|format(metrics.roc_auc * 100) }}%</b><span>ROC-AUC</span></div>
+        <div class="stat"><b>{{ "%.1f"|format(metrics.accuracy * 100) }}%</b><span>Accuracy</span></div>
+        <div class="stat"><b>{{ "%.1f"|format(metrics.precision * 100) }}%</b><span>Precision</span></div>
+        <div class="stat"><b>{{ "%.1f"|format(metrics.recall * 100) }}%</b><span>Recall</span></div>
+      </div>
+      <p class="fineprint">
+        Measured on {{ "{:,}".format(metrics.n_test) }} held-out URLs the model
+        never saw during training. <a href="/report">See the full report &rarr;</a>
+      </p>
+    </article>
+
+    <article class="panel">
+      <h2>Scan history</h2>
+      <ol id="history" class="history"><li class="empty">Nothing scanned yet.</li></ol>
+      <button id="clear-history" class="linkbtn">Clear history</button>
+    </article>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <p>PhishGuard &middot; Random Forest over nine lexical URL features &middot;
+     trained {{ meta.trained_at }}</p>
+  <p class="fineprint">A prediction is a risk signal, not a guarantee. Judgement
+     still belongs to you.</p>
+</footer>
+
+<!-- Full-screen phishing warning: shown when the model flags the scanned URL -->
+<div id="warning" class="warning-overlay hidden" role="alertdialog"
+     aria-modal="true" aria-labelledby="warning-title">
+  <div class="warning-card">
+    <div class="warning-stripe"></div>
+    <div class="warning-body">
+      <div class="warning-icon">&#9888;</div>
+      <h2 id="warning-title">Phishing website detected</h2>
+      <p class="warning-lead">
+        Our model believes this link is a <strong>phishing website</strong>
+        built to steal passwords, card numbers or personal information.
+      </p>
+
+      <div class="warning-url" id="warning-url"></div>
+
+      <div class="warning-meter">
+        <div class="warning-meter-head">
+          <span>Phishing risk</span><strong id="warning-score">0%</strong>
+        </div>
+        <div class="warning-bar"><i id="warning-fill"></i></div>
+      </div>
+
+      <ul class="warning-reasons" id="warning-reasons"></ul>
+
+      <div class="warning-actions">
+        <button id="btn-proceed" class="btn btn-danger" type="button">
+          Proceed with this Website
+        </button>
+        <button id="btn-safety" class="btn btn-safe" type="button" autofocus>
+          Return to Safety
+        </button>
+      </div>
+      <p class="warning-fineprint">
+        &ldquo;Return to Safety&rdquo; is the recommended choice. Proceeding
+        opens the site in a new tab at your own risk.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

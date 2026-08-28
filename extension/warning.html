@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phishing website blocked — PhishGuard</title>
+<link rel="stylesheet" href="warning.css">
+</head>
+<body>
+
+<div class="stripe"></div>
+
+<main class="shell">
+  <div class="card">
+    <div class="icon">&#9888;</div>
+
+    <h1>Phishing website detected</h1>
+
+    <p class="lead">
+      PhishGuard's model predicts that the link you clicked leads to a
+      <strong>phishing website</strong> — a fake page built to steal passwords,
+      card numbers or personal information.
+    </p>
+
+    <div class="urlbox">
+      <span class="urlbox-label">Blocked address</span>
+      <code id="blocked-url">&nbsp;</code>
+      <span class="urlbox-host" id="blocked-host"></span>
+    </div>
+
+    <div class="meter">
+      <div class="meter-head">
+        <span>Phishing risk</span>
+        <strong id="risk-score">0%</strong>
+      </div>
+      <div class="bar"><i id="risk-fill"></i></div>
+      <div class="meter-foot" id="risk-note"></div>
+    </div>
+
+    <section class="why">
+      <h2>What looks wrong about this link</h2>
+      <ul id="reasons"></ul>
+    </section>
+
+    <div class="actions">
+      <button id="btn-proceed" class="btn btn-danger" type="button">
+        Proceed with this Website
+      </button>
+      <button id="btn-safety" class="btn btn-safe" type="button">
+        Return to Safety
+      </button>
+    </div>
+
+    <p class="hint">
+      &ldquo;Return to Safety&rdquo; takes you back to where you were.
+      Proceeding continues to the site at your own risk — never type a
+      password or card number on a page you reached this way.
+    </p>
+
+    <details class="details">
+      <summary>Technical details</summary>
+      <table id="feature-table"></table>
+      <p class="fineprint">
+        Scored on this device by a gradient-boosting model trained on 11,430
+        labelled URLs. No part of your browsing was sent anywhere.
+      </p>
+      <button id="btn-trust" class="linkbtn" type="button">
+        This site is safe — never warn me about it again
+      </button>
+    </details>
+  </div>
+</main>
+
+<script src="lib/features.js"></script>
+<script src="warning.js"></script>
+</body>
+</html>
