@@ -27,8 +27,34 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from features import FEATURE_NAMES, extract_features  # noqa: E402
 
+# The Windows console defaults to cp1252, which cannot print an
+# internationalised URL. Without this, a report about a non-ASCII URL would
+# crash instead of being shown.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXT_LIB = os.path.join(ROOT, "extension", "lib")
+
+# Every dataset URL is plain ASCII, so the sampled rows alone would never
+# exercise the places where Python's `urlparse` and JavaScript's `URL` disagree.
+# These are checked on every run as well.
+EDGE_CASES = [
+    "http://пример.рф/login",       # Cyrillic IDN
+    "https://例え.テスト/a/b?x=1",                      # Japanese IDN
+    "http://аpple.com/signin",                                          # homograph: Cyrillic 'a'
+    "http://xn--e1afmkfd.xn--p1ai/login",                                    # already punycoded
+    "http://EXAMPLE.COM/Path",                                               # mixed case host
+    "http://user:pass@evil.example.com:8443/a?b=1",                          # userinfo + port
+    "http://[2001:db8::1]:8080/x",                                           # IPv6 literal
+    "https://example.com:443/a",                                             # default port
+    "http://example.com/a b c",                                              # spaces in path
+    "  https://example.com/trim  ",                                          # needs trimming
+    "example.com/no-scheme",                                                 # no scheme
+    "http://a_b.example.com/x",                                              # underscore label
+    "http://example.com./x",                                                 # trailing dot
+    "https://sub.domain.co.uk/a?b=1&c=2|3",                                  # two-part TLD, pipe
+]
 
 RUNNER = r"""
 const fs = require('fs');
@@ -54,6 +80,7 @@ def main() -> int:
     df = pd.read_csv(os.path.join(ROOT, "data", "dataset_phishing.csv"),
                      usecols=["url"])
     urls = df["url"].sample(n=min(n, len(df)), random_state=7).tolist()
+    urls += EDGE_CASES
 
     tmp = tempfile.mkdtemp(prefix="parity_")
     runner_js = os.path.join(tmp, "runner.js")
@@ -62,10 +89,10 @@ def main() -> int:
     with open(runner_js, "w", encoding="utf-8") as fh:
         fh.write(RUNNER)
     with open(urls_json, "w", encoding="utf-8") as fh:
-        json.dump(urls, fh)
+        json.dump(urls, fh, ensure_ascii=False)
 
     print("Running extension JavaScript under Node on " + str(len(urls))
-          + " dataset URLs...")
+          + " URLs (" + str(len(EDGE_CASES)) + " of them hand-picked edge cases)...")
     proc = subprocess.run(["node", runner_js, EXT_LIB, urls_json, out_json],
                           capture_output=True, text=True)
     if proc.returncode != 0:

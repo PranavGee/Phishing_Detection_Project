@@ -33,7 +33,7 @@
       "f1_std": 0.010012160874544816,
       "roc_auc": 0.765783869471203,
       "roc_auc_std": 0.013717634345099032,
-      "fit_time_s": 2.33
+      "fit_time_s": 2.45
     },
     {
       "model": "K-Nearest Neighbors",
@@ -47,7 +47,7 @@
       "f1_std": 0.010413483473683344,
       "roc_auc": 0.8299900345026645,
       "roc_auc_std": 0.01564767093630107,
-      "fit_time_s": 2.29
+      "fit_time_s": 2.03
     },
     {
       "model": "Gaussian Naive Bayes",
@@ -61,7 +61,7 @@
       "f1_std": 0.008713568137463637,
       "roc_auc": 0.7899682811334892,
       "roc_auc_std": 0.013146941701270542,
-      "fit_time_s": 2.17
+      "fit_time_s": 2.34
     },
     {
       "model": "SVM (RBF)",
@@ -75,7 +75,7 @@
       "f1_std": 0.01714130074116374,
       "roc_auc": 0.8274703987117317,
       "roc_auc_std": 0.013355905407835657,
-      "fit_time_s": 14.18
+      "fit_time_s": 11.97
     },
     {
       "model": "Decision Tree",
@@ -89,7 +89,7 @@
       "f1_std": 0.014914405299350198,
       "roc_auc": 0.8276566003827327,
       "roc_auc_std": 0.0092865225982554,
-      "fit_time_s": 0.13
+      "fit_time_s": 0.11
     },
     {
       "model": "Random Forest",
@@ -103,7 +103,7 @@
       "f1_std": 0.010776742547204917,
       "roc_auc": 0.8652534300214864,
       "roc_auc_std": 0.013033017751849627,
-      "fit_time_s": 2.26
+      "fit_time_s": 1.97
     },
     {
       "model": "Extra Trees",
@@ -117,7 +117,7 @@
       "f1_std": 0.010565921354316266,
       "roc_auc": 0.8616355200231338,
       "roc_auc_std": 0.013165673953367317,
-      "fit_time_s": 1.58
+      "fit_time_s": 1.31
     },
     {
       "model": "Gradient Boosting",
@@ -131,9 +131,9 @@
       "f1_std": 0.01241919768247955,
       "roc_auc": 0.858491008367564,
       "roc_auc_std": 0.013158447360856395,
-      "fit_time_s": 2.31
+      "fit_time_s": 1.74
     }
   ],
-  "trained_at": "2026-08-28 08:24:24",
+  "trained_at": "2026-08-28 09:19:33",
   "sklearn_version": "1.9.0"
 }

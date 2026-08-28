@@ -237,9 +237,10 @@ Two checks keep the extension honest:
   unless it reproduces scikit-learn's `predict_proba` on the whole test set to
   within 1e-9 (actual: **2.6e-13**).
 * [`ml/parity_check.py`](ml/parity_check.py) runs the extension's real
-  JavaScript under Node over 1,500 dataset URLs and compares every feature and
-  probability against Python. Current result: **0 feature mismatches, max
-  probability delta 3.0e-13**.
+  JavaScript under Node over 1,500 dataset URLs **plus 14 hand-picked edge
+  cases** (internationalised domains, homographs, IPv6 literals, userinfo,
+  ports, spaces) and compares every feature and probability against Python.
+  Current result: **0 feature mismatches, max probability delta 3.0e-13**.
 
 Optionally, Options can point the extension at a running web app for a second
 opinion from the Random Forest. It is **off by default**, because turning it on
@@ -288,13 +289,21 @@ curl -X POST http://127.0.0.1:5000/api/predict \
 python run.py test
 ```
 
-* `tests/test_api.py` — 27 checks: routes, prediction, thresholds, batch,
-  input validation.
-* `tests/test_extension.js` — 26 checks: feature extraction against known
-  dataset rows, scoring, the allowlist, and accuracy on a dataset sample.
+* `tests/test_api.py` — 30 checks: routes, prediction, thresholds, batch,
+  input validation, internationalised domains.
+* `tests/test_extension.js` — 30 checks: feature extraction against known
+  dataset rows, punycode handling, scoring, the allowlist, and accuracy on a
+  dataset sample.
 * `ml/parity_check.py` — Python ↔ JavaScript agreement.
 
-All 53 checks currently pass.
+All 60 checks currently pass.
+
+The edge-case URLs in `ml/parity_check.py` exist because of a real bug they now
+guard: `urlparse` leaves an internationalised hostname in Unicode while
+JavaScript's `URL` punycodes it, so `http://пример.рф/login` scored
+`length_hostname` 9 in the web app and 21 in the extension — a 0.56 swing in
+predicted probability for the same link. `ml/features.py` now punycodes to match
+what the browser actually resolves.
 
 ### Verified in a real browser
 

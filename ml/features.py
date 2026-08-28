@@ -63,6 +63,22 @@ def normalize_url(url: str) -> str:
     return url
 
 
+def _to_ascii_host(host: str) -> str:
+    """Punycode an internationalised hostname, the way a browser resolves it.
+
+    `new URL(...).host` in JavaScript always yields the ASCII (IDNA) form, so
+    without this the extension and the web app would compute a different
+    `length_hostname` for the same internationalised URL and could disagree on
+    the verdict.  Hosts IDNA cannot encode are left alone rather than dropped.
+    """
+    if host.isascii():
+        return host
+    try:
+        return host.encode("idna").decode("ascii")
+    except (UnicodeError, UnicodeDecodeError):
+        return host
+
+
 def get_hostname(url: str) -> str:
     """Hostname without the port, matching the dataset's `length_hostname`."""
     netloc = urlparse(normalize_url(url)).netloc
@@ -70,7 +86,7 @@ def get_hostname(url: str) -> str:
         netloc = netloc.rsplit("@", 1)[1]
     if netloc.startswith("["):             # IPv6 literal
         return netloc.split("]")[0] + "]"
-    return netloc.split(":")[0]
+    return _to_ascii_host(netloc.split(":")[0])
 
 
 def extract_features(url: str) -> dict:
@@ -99,6 +115,11 @@ def extract_vector(url: str) -> list:
 if __name__ == "__main__":
     import json
     import sys
+
+    # The Windows console defaults to cp1252 and cannot print an
+    # internationalised URL; keep the CLI usable for those too.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     for arg in sys.argv[1:] or ["http://secure-login.paypal.com.verify-account.tk/a1b2c3d4e5f6/?id=1&x=2"]:
         print(arg)

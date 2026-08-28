@@ -18,6 +18,12 @@ sys.path.insert(0, os.path.join(ROOT, "ml"))
 
 from app import app  # noqa: E402
 
+# The Windows console defaults to cp1252, which cannot print an
+# internationalised URL. Without this, a report about a non-ASCII URL would
+# crash instead of being shown.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 passed = 0
 failed = 0
 
@@ -119,6 +125,20 @@ def main() -> int:
     print("\nA URL with no scheme still works")
     bare = client.post("/api/predict", json={"url": "example.com/login"}).get_json()
     check("hostname resolved without a scheme", bare["hostname"], "example.com")
+
+    print("\nInternationalised domains")
+    # The browser resolves the punycode form, so the API must report it too.
+    # Otherwise the web app and the extension would score the same URL
+    # differently, which is exactly the bug this guards against.
+    idn = client.post("/api/predict",
+                      json={"url": "http://пример.рф/login"}).get_json()
+    check("an IDN hostname is punycoded", idn["hostname"], "xn--e1afmkfd.xn--p1ai")
+    check("length_hostname matches the punycoded form",
+          idn["features"]["length_hostname"], 21)
+    homograph = client.post("/api/predict",
+                            json={"url": "http://аpple.com/signin"}).get_json()
+    check("a homograph domain is exposed as punycode",
+          homograph["hostname"], "xn--pple-43d.com")
 
     print("\n" + ("All " + str(passed) + " checks passed."
                   if failed == 0 else

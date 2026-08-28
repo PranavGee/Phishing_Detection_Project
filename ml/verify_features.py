@@ -18,6 +18,12 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from features import FEATURE_NAMES, extract_features  # noqa: E402
 
+# The Windows console defaults to cp1252, which cannot print an
+# internationalised URL. Without this, a report about a non-ASCII URL would
+# crash instead of being shown.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data", "dataset_phishing.csv")
 OUT = os.path.join(ROOT, "reports", "metrics", "feature_verification.json")

@@ -45,8 +45,12 @@ async function saveSettings(patch) {
 }
 
 async function bumpStat(key, by = 1) {
-  const stats = { ...settings.stats, [key]: (settings.stats[key] || 0) + by };
-  await saveSettings({ stats });
+  // Read straight from storage rather than from the in-memory copy: several
+  // navigation events can be in flight at once, and a stale copy would drop
+  // the other handlers' increments.
+  const { stats } = await chrome.storage.local.get({ stats: DEFAULTS.stats });
+  const next = { ...stats, [key]: (stats[key] || 0) + by };
+  await saveSettings({ stats: next });
 }
 
 /* --------------------------------------------------------------------- */

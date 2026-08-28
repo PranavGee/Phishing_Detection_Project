@@ -68,6 +68,22 @@ check("nb_and counts ampersands", f4.nb_and, 1);
 check("scheme-less input is normalised",
   self.PhishFeatures.getHostname("example.com/path"), "example.com");
 
+/* Internationalised domains: the browser resolves the punycode form, so both
+   implementations must agree on it. Python's urlparse used to leave the
+   Unicode form here, which made the web app and the extension disagree. */
+check("an internationalised host is punycoded",
+  self.PhishFeatures.getHostname("http://пример.рф/login"),
+  "xn--e1afmkfd.xn--p1ai");
+check("an already-punycoded host is left alone",
+  self.PhishFeatures.getHostname("http://xn--e1afmkfd.xn--p1ai/login"),
+  "xn--e1afmkfd.xn--p1ai");
+check("a homograph domain punycodes to something visibly different",
+  self.PhishFeatures.getHostname("http://аpple.com/signin"),
+  "xn--pple-43d.com");
+check("length_hostname uses the punycoded length",
+  self.PhishFeatures.extractFeatures(
+    "http://пример.рф/login").length_hostname, 21);
+
 /* --------------------------------------------------------------------- */
 console.log("\nModel scoring");
 

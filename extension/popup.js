@@ -38,6 +38,10 @@
   }
 
   function colourFor(verdict) {
+    // A trusted site is never interrupted, so its raw score must not be
+    // painted like a warning — an amber 98% under the words "Trusted site"
+    // reads as a contradiction.
+    if (verdict.allowlisted) return "#7d88ad";
     if (verdict.is_phishing) return "#e02424";
     if (verdict.probability >= 0.5) return "#e8a33d";
     return "#10a45c";
@@ -48,6 +52,19 @@
     if (verdict.is_phishing) return "Phishing risk";
     if (verdict.probability >= 0.5) return "Slightly unusual";
     return "Looks safe";
+  }
+
+  function noteFor(verdict, enabled) {
+    if (!enabled) {
+      return "Protection is off — nothing is being checked.";
+    }
+    if (verdict.allowlisted) {
+      // Say the quiet part out loud: the number above is the raw structural
+      // score, and it is being deliberately ignored for this domain.
+      return "Its address scores " + Math.round(verdict.probability * 100) +
+        "%, but this domain is trusted, so you are never interrupted.";
+    }
+    return "Scored on-device from the address alone.";
   }
 
   /* ---------------- current tab ---------------- */
@@ -71,9 +88,7 @@
         setRing(score, colourFor(verdict));
         els.title.textContent = titleFor(verdict);
         els.title.style.color = colourFor(verdict);
-        els.note.textContent = verdict.allowlisted
-          ? "On the trusted-domain list, so it is never interrupted."
-          : "Scored on-device from the address alone.";
+        els.note.textContent = noteFor(verdict, els.enabled.checked);
         els.trust.disabled = !!verdict.allowlisted;
         if (verdict.allowlisted) els.trust.textContent = "Already trusted";
       });
@@ -118,6 +133,9 @@
     if (settings.useApi && settings.apiUrl) {
       els.modelNote.textContent = "on-device + API";
     }
+    // Re-render now that we know whether protection is actually on: the first
+    // paint runs before this reply arrives and assumes the HTML default.
+    showCurrentTab();
   });
 
   els.enabled.addEventListener("change", function () {
