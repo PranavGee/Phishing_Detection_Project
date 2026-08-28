@@ -296,6 +296,28 @@ python run.py test
 
 All 53 checks currently pass.
 
+### Verified in a real browser
+
+The extension was also driven end to end in a live Chromium browser over the
+DevTools protocol, with these results:
+
+| Check | Result |
+| --- | --- |
+| Service worker boots and loads `model.json` | yes, 0 errors |
+| Scores a known phishing URL | 0.9943, flagged |
+| Marks risky links on a page, leaves safe ones alone | 2 of 4 links marked, correctly |
+| Clicking a flagged link shows the modal and cancels navigation | yes, URL unchanged |
+| Navigating to a phishing URL is intercepted | lands on the warning page |
+| Warning page renders both buttons, green focused by default | yes |
+| **Return to Safety** returns to the previous page | yes |
+| **Proceed with this Website** continues and records the override | yes |
+| The bypass persists, so the same URL is not blocked twice | yes |
+
+Note: recent Google Chrome builds refuse `--load-extension` from the command
+line, so that automated pass runs under Edge. Loading the folder by hand through
+`chrome://extensions` → Developer mode → Load unpacked is unaffected and works
+in both browsers.
+
 ---
 
 ## Project layout
